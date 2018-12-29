@@ -14,7 +14,7 @@ func DateStr(date *time.Time) string {
 }
 
 func CCStr(cc *chinese_calendar.ChineseCalendar) string {
-	return fmt.Sprintf("%d-%2d-%2d", cc.Year, cc.Month, cc.Day)
+	return fmt.Sprintf("%d-%02d-%02d", cc.Year, cc.Month, cc.Day)
 }
 
 func CCTime(cc *chinese_calendar.ChineseCalendar) time.Time {
