@@ -6,9 +6,9 @@ import (
 )
 
 type Birthday struct {
-	ID            int64  `db:"id"`
-	UID           int64  `db:"uid"`
-	Name          string `db:"name"`           // 名字
+	ID            int64     `db:"id"`
+	UID           int64     `db:"uid"`
+	Name          string    `db:"name"`           // 名字
 	LunarBirthday time.Time `db:"lunar_birthday"` // 农历生日
 	SolarBirthday time.Time `db:"solar_birthday"` // 阳历生日
 }
@@ -35,6 +35,40 @@ func GetBirthday(query sqrl.Eq) ([]Birthday, error) {
 		sqlBuilder = sqlBuilder.Where(query)
 	}
 	sql, args, err := sqlBuilder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+	var birthday []Birthday
+	err = db.Select(&birthday, sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	return birthday, nil
+}
+
+func GetBirthdaySolarBetween(from, to string) ([]Birthday, error) {
+	sql, args, err := sqrl.Select("id", "uid", "name", "lunar_birthday", "solar_birthday").
+		From("birthday").
+		Where(sqrl.LtOrEq{"solar_birthday": from}).
+		Where(sqrl.GtOrEq{"solar_birthday": to}).
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+	var birthday []Birthday
+	err = db.Select(&birthday, sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	return birthday, nil
+}
+
+func GetBirthdayLunarBetween(from, to string) ([]Birthday, error) {
+	sql, args, err := sqrl.Select("id", "uid", "name", "lunar_birthday", "solar_birthday").
+		From("birthday").
+		Where(sqrl.LtOrEq{"lunar_birthday": from}).
+		Where(sqrl.GtOrEq{"lunar_birthday": to}).
+		ToSql()
 	if err != nil {
 		return nil, err
 	}
