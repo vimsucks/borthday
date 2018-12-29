@@ -1,0 +1,18 @@
+[APP]
+# （Available：debug, release, test，默认 debug）
+Mode = "debug"
+# 日志文件路径（默认为当前目录下的 borthday.log 文件）
+LogFile = ""
+# 是否输出日志到 STDOUT（默认 false）
+LogStdout = true
+# 日志级别（panic, fatal, error, warn, info, debug，由大到小)
+LogLevel = "debug"
+# SQLite 数据库文件路径
+SQLiteFilePath = "/tmp/borthday.db"
+
+[BOT]
+# Telegram Bot Token
+Token = "YOUR_TELEGRAM_BOT_TOKEN"
+# 轮询 Timeout，单位秒
+PollerTimeout = 10
+
