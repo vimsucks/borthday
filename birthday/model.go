@@ -29,6 +29,22 @@ func CreateBirthday(birthday *Birthday) error {
 	return err
 }
 
+func UpdateBirthday(birthday *Birthday) error {
+	sql, args, err := sqrl.
+		Update("birthday").
+		Set("uid", birthday.UID).
+		Set("name", birthday.Name).
+		Set("lunar_birthday", birthday.LunarBirthday).
+		Set("solar_birthday", birthday.SolarBirthday).
+		Where(sqrl.Eq{"id": birthday.ID}).
+		ToSql()
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(sql, args...)
+	return err
+}
+
 func GetBirthday(query sqrl.Eq) ([]Birthday, error) {
 	sqlBuilder := sqrl.Select("id", "uid", "name", "lunar_birthday", "solar_birthday").From("birthday")
 	if len(query) != 0 {
@@ -46,11 +62,34 @@ func GetBirthday(query sqrl.Eq) ([]Birthday, error) {
 	return birthday, nil
 }
 
+func GetBirthdayByUser(uid int64, name string) (*Birthday, error) {
+	query := sqrl.Eq{}
+	query["uid"] = uid
+	query["name"] = name
+	sqlBuilder := sqrl.Select("id", "uid", "name", "lunar_birthday", "solar_birthday").From("birthday")
+	if len(query) != 0 {
+		sqlBuilder = sqlBuilder.Where(query)
+	}
+	sql, args, err := sqlBuilder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+	var birthday []*Birthday
+	err = db.Select(&birthday, sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	if len(birthday) == 0 {
+		return nil, nil
+	}
+	return birthday[0], nil
+}
+
+// from, to 格式： 10-01（%m-%d）
 func GetBirthdaySolarBetween(from, to string) ([]Birthday, error) {
 	sql, args, err := sqrl.Select("id", "uid", "name", "lunar_birthday", "solar_birthday").
 		From("birthday").
-		Where(sqrl.LtOrEq{"solar_birthday": from}).
-		Where(sqrl.GtOrEq{"solar_birthday": to}).
+		Where("strftime('%m-%d', solar_birthday) between ? and ?", from, to).
 		ToSql()
 	if err != nil {
 		return nil, err
@@ -63,11 +102,11 @@ func GetBirthdaySolarBetween(from, to string) ([]Birthday, error) {
 	return birthday, nil
 }
 
+// from, to 格式： 10-01（%m-%d）
 func GetBirthdayLunarBetween(from, to string) ([]Birthday, error) {
 	sql, args, err := sqrl.Select("id", "uid", "name", "lunar_birthday", "solar_birthday").
 		From("birthday").
-		Where(sqrl.LtOrEq{"lunar_birthday": from}).
-		Where(sqrl.GtOrEq{"lunar_birthday": to}).
+		Where("strftime('%m-%d', lunar_birthday) between ? and ?", from, to).
 		ToSql()
 	if err != nil {
 		return nil, err

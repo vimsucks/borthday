@@ -2,16 +2,17 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/robfig/cron"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/vimsucks/borthday/birthday"
+	"github.com/vimsucks/borthday/birthday/tpl"
 	"github.com/vimsucks/borthday/config"
 	"github.com/vimsucks/borthday/util"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"io"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -95,29 +96,40 @@ func getLogFile(filePath string) *os.File {
 
 func startCron(bot *tb.Bot) {
 	c := cron.New()
-	c.AddFunc("@every 5s", func() {
+	c.AddFunc("0 0 1 * * ?", func() {
 		today := time.Now()
 		fivesDayAfter := today.AddDate(0, 0, 5)
-		birthdays, err := birthday.GetBirthdaySolarBetween(util.DateStr(&today), util.DateStr(&fivesDayAfter))
+		birthdays, err := birthday.GetBirthdaySolarBetween(util.MonthDay(&today), util.MonthDay(&fivesDayAfter))
+		notified := make(map[string]int)
 		if err != nil {
 			log.Error().Err(err)
 		}
 		for _, b := range birthdays {
 			receiver := &tb.User{}
 			receiver.ID = int(b.UID)
-			bot.Send(receiver, fmt.Sprintf("%s快要过阳历生日了（%s）", b.Name, b.SolarBirthday))
+			key := b.Name + strconv.FormatInt(b.UID, 10)
+			if _, ok := notified[key]; !ok {
+				msg, _ := util.RenderTemplate(tpl.IncomingBirthday, b)
+				bot.Send(receiver, msg)
+				notified[key] = 1
+			}
 		}
 		lunarTodayCal, _ := util.SolarToLunar(util.DateStr(&today))
 		lunarToday := util.CCTime(lunarTodayCal)
 		lunarFivesDayAfter := lunarToday.AddDate(0, 0, 5)
-		birthdays, err = birthday.GetBirthdayLunarBetween(util.DateStr(&lunarToday), util.DateStr(&lunarFivesDayAfter))
+		birthdays, err = birthday.GetBirthdayLunarBetween(util.MonthDay(&lunarToday), util.MonthDay(&lunarFivesDayAfter))
 		if err != nil {
 			log.Error().Err(err)
 		}
 		for _, b := range birthdays {
 			receiver := &tb.User{}
 			receiver.ID = int(b.UID)
-			bot.Send(receiver, fmt.Sprintf("%s快要过农历生日了（%s）", b.Name, b.LunarBirthday))
+			key := b.Name + strconv.FormatInt(b.UID, 10)
+			if _, ok := notified[b.Name + strconv.FormatInt(b.UID, 10)]; !ok {
+				msg, _ := util.RenderTemplate(tpl.IncomingBirthday, b)
+				bot.Send(receiver, msg)
+				notified[key] = 1
+			}
 		}
 	})
 	c.Start()

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/elgris/sqrl"
 	"github.com/jmoiron/sqlx"
+	"github.com/vimsucks/borthday/util"
 	"log"
 	"math/rand"
 	"os"
@@ -17,7 +18,8 @@ func init () {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	db, err = sqlx.Connect("sqlite3", cwd + "../borthday.db")
+	dbFilePath := fmt.Sprintf("%s%s..%sborthday.db", cwd, string(os.PathSeparator), string(os.PathSeparator))
+	db, err = sqlx.Connect("sqlite3", (dbFilePath))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -34,8 +36,8 @@ func TestCRUD(t *testing.T) {
 	b := Birthday{
 		UID: uid,
 		Name: "test",
-		LunarBirthday: "2018-11-26",
-		SolarBirthday: "2018-11-22",
+		LunarBirthday: util.ParseDate("2018-11-26"),
+		SolarBirthday: util.ParseDate("2018-11-22"),
 	}
 	err := CreateBirthday(&b)
 	if err != nil {

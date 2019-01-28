@@ -13,15 +13,20 @@ func DateStr(date *time.Time) string {
 	return date.Format(layout)
 }
 
+func MonthDay(date *time.Time) string {
+	layout := "01-02"
+	return date.Format(layout)
+}
+
 func CCStr(cc *chinese_calendar.ChineseCalendar) string {
 	return fmt.Sprintf("%d-%02d-%02d", cc.Year, cc.Month, cc.Day)
 }
 
 func CCTime(cc *chinese_calendar.ChineseCalendar) time.Time {
-	return ParseTime(CCStr(cc))
+	return ParseDate(CCStr(cc))
 }
 
-func ParseTime(str string) time.Time {
+func ParseDate(str string) time.Time {
 	layout := "2006-01-02"
 	day, _ := time.Parse(layout, str)
 	return day
